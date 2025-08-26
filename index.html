@@ -13,7 +13,7 @@
     canvas {
       margin: 10px;
       border-radius: 8px;
-      image-rendering: pixelated; /* sharp edges */
+      image-rendering: pixelated; /* crisp edges */
     }
     button {
       margin: 5px;
@@ -32,7 +32,7 @@
   </style>
 </head>
 <body>
-  <canvas id="bandPattern" width="1000" height="200"></canvas>
+  <canvas id="bandPattern" width="675" height="135"></canvas>
   <br>
   <div>
     <button onclick="giveFeedback('nnn')">👎👎👎</button>
@@ -50,43 +50,54 @@
 // -----------------------------
 const teal = "#01e49a";
 const black = "#000000";
-const tileSize = 41;   // Odd for symmetry
-const pixelScale = 5;  // Scale factor per pixel for rendering
+const tileSize = 27;   // Smaller grid like Python
+const pixelScale = 5;  // Scale factor per pixel
+const repeats = 5;
 
 // -----------------------------
-// RANDOM STAR GRID GENERATOR
+// RANDOM STAR PARAMETERS
 // -----------------------------
 function randomStarParams() {
   return {
-    numPoints: Math.floor(Math.random() * 4) + 6,  // 6–9 points
-    layers: Math.floor(Math.random() * 3) + 2,     // 2–4 layers
-    rotation: Math.random() * Math.PI / 6,         // slight random rotation
-    sprinkleChance: Math.random() * 0.15           // chance for small extras
+    numPoints: Math.floor(Math.random() * 5) + 6, // 6-10
+    layers: Math.floor(Math.random() * 3) + 3,    // 3-5
+    rotation: Math.random() * Math.PI / 10,       // small rotation
+    sprinkleChance: Math.random() * 0.15          // sprinkle small extras
   };
 }
 
+// -----------------------------
+// GENERATE STAR GRID
+// -----------------------------
 function generateStarPattern(size, params) {
-  const grid = Array.from({ length: size }, () => Array(size).fill(0));
+  const grid = Array.from({length: size}, () => Array(size).fill(0));
   const center = Math.floor(size / 2);
+  const maxRadius = center * 0.9;
 
   for (let i = 0; i <= center; i++) {
     for (let j = 0; j <= center; j++) {
-      const dx = i, dy = j;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const dx = i;
+      const dy = j;
+      const r = Math.sqrt(dx*dx + dy*dy);
       const angle = Math.atan2(dy, dx) + params.rotation;
 
-      // Star function
-      const starValue = Math.sin(angle * params.numPoints) * Math.cos(distance / (size / params.layers));
-      const val = starValue > 0.3 ? 1 : 0;
+      const starVal = (Math.sin(angle * params.numPoints) + 1)/2;
+      const ringBand = Math.floor((r / maxRadius) * params.layers);
 
-      // Sprinkle extras
-      const finalVal = (val || Math.random() < params.sprinkleChance) ? 1 : 0;
+      let val = 0;
+      if (r < maxRadius && starVal > 0.65 && (ringBand % 2 === 0 || (ringBand === 1 && Math.random() < 0.7))) {
+        val = 1;
+      }
+      // Sprinkles
+      if (r < maxRadius*0.85 && Math.random() < params.sprinkleChance) val = 1;
+      // Satellites
+      if (starVal > 0.85 && Math.random() < 0.25) val = 1;
 
-      // Mirror to all four quadrants
-      grid[center + i][center + j] = finalVal;
-      grid[center + i][center - j] = finalVal;
-      grid[center - i][center + j] = finalVal;
-      grid[center - i][center - j] = finalVal;
+      // Mirror to four quadrants
+      grid[center + i][center + j] = val;
+      grid[center + i][center - j] = val;
+      grid[center - i][center + j] = val;
+      grid[center - i][center - j] = val;
     }
   }
   return grid;
@@ -100,15 +111,18 @@ function drawBand(grid, canvasId, repeats) {
   const ctx = canvas.getContext("2d");
   const size = grid.length;
 
+  canvas.width = size * pixelScale * repeats;
+  canvas.height = size * pixelScale;
+
   ctx.fillStyle = black;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   for (let r = 0; r < repeats; r++) {
-    for (let x = 0; x < size; x++) {
-      for (let y = 0; y < size; y++) {
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
         if (grid[y][x] === 1) {
           ctx.fillStyle = teal;
-          ctx.fillRect(r * size * pixelScale + x * pixelScale, y * pixelScale, pixelScale, pixelScale);
+          ctx.fillRect(r*size*pixelScale + x*pixelScale, y*pixelScale, pixelScale, pixelScale);
         }
       }
     }
@@ -123,7 +137,7 @@ let currentParams = null;
 function startPattern() {
   currentParams = randomStarParams();
   const grid = generateStarPattern(tileSize, currentParams);
-  drawBand(grid, "bandPattern", 5);
+  drawBand(grid, "bandPattern", repeats);
 }
 
 function giveFeedback(resp) {
@@ -132,12 +146,10 @@ function giveFeedback(resp) {
     return;
   }
   console.log("Feedback:", resp, "for params:", currentParams);
-  // For now, just regenerate a new one
   currentParams = randomStarParams();
   const grid = generateStarPattern(tileSize, currentParams);
-  drawBand(grid, "bandPattern", 5);
+  drawBand(grid, "bandPattern", repeats);
 }
-
 </script>
 </body>
 </html>
