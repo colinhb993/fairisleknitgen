@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fair Isle Star Band</title>
+  <style>
+    body {
+      background: #000;
+      font-family: sans-serif;
+      text-align: center;
+      color: #fff;
+    }
+    canvas {
+      margin: 10px;
+      border-radius: 8px;
+      image-rendering: pixelated;
+    }
+    button {
+      margin: 5px;
+      padding: 10px 15px;
+      border: 1px solid #01e49a;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #000;
+      color: #01e49a;
+      font-size: 1rem;
+    }
+    button:hover {
+      background: #01e49a;
+      color: #000;
+    }
+  </style>
+</head>
+<body>
+  <h2>Fair Isle Star Band Generator</h2>
+  <canvas id="bandPattern" width="1000" height="200"></canvas>
+  <br>
+  <button onclick="giveFeedback('nnn')">👎👎👎</button>
+  <button onclick="giveFeedback('nn')">👎👎</button>
+  <button onclick="giveFeedback('n')">👎</button>
+  <button onclick="startPattern()">▶️ Start</button>
+  <button onclick="giveFeedback('y')">👍</button>
+  <button onclick="giveFeedback('yy')">👍👍</button>
+  <button onclick="giveFeedback('yyy')">👍👍👍</button>
+
+  <script>
+    const teal = "#01e49a";
+    const black = "#000000";
+    const tileSize = 41;
+    const pixelScale = 5;
+    let currentParams = null;
+
+    function randomStarParams() {
+      return {
+        numPoints: Math.floor(Math.random() * 4) + 6,
+        layers: Math.floor(Math.random() * 3) + 2,
+        rotation: Math.random() * Math.PI / 6,
+        sprinkleChance: Math.random() * 0.15
+      };
+    }
+
+    function generateStarPattern(size, params) {
+      const grid = Array.from({ length: size }, () => Array(size).fill(0));
+      const center = Math.floor(size / 2);
+
+      for (let i = 0; i <= center; i++) {
+        for (let j = 0; j <= center; j++) {
+          const dx = i, dy = j;
+          const distance = Math.sqrt(dx*dx + dy*dy);
+          const angle = Math.atan2(dy, dx) + params.rotation;
+          const starValue = Math.sin(angle * params.numPoints) * Math.cos(distance / (size / params.layers));
+          const val = starValue > 0.3 ? 1 : 0;
+          const finalVal = (val || Math.random() < params.sprinkleChance) ? 1 : 0;
+          grid[center + i][center + j] = finalVal;
+          grid[center + i][center - j] = finalVal;
+          grid[center - i][center + j] = finalVal;
+          grid[center - i][center - j] = finalVal;
+        }
+      }
+      return grid;
+    }
+
+    function drawBand(grid) {
+      const canvas = document.getElementById("bandPattern");
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = black;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      for (let r = 0; r < 5; r++) {
+        for (let x = 0; x < tileSize; x++) {
+          for (let y = 0; y < tileSize; y++) {
+            if (grid[y][x] === 1) {
+              ctx.fillStyle = teal;
+              ctx.fillRect(r*tileSize*pixelScale + x*pixelScale, y*pixelScale, pixelScale, pixelScale);
+            }
+          }
+        }
+      }
+    }
+
+    function startPattern() {
+      currentParams = randomStarParams();
+      const grid = generateStarPattern(tileSize, currentParams);
+      drawBand(grid);
+    }
+
+    function giveFeedback(resp) {
+      if (!currentParams) { console.log("Press Start first"); return; }
+      console.log("Feedback:", resp, "Params:", currentParams);
+      currentParams = randomStarParams();
+      const grid
