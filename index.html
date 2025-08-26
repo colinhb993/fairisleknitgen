@@ -1,48 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Fair Isle Star Band</title>
-  <style>
-    body {
-      background: #000000;
-      font-family: sans-serif;
-      text-align: center;
-      color: #fff;
-    }
-    canvas {
-      margin: 10px;
-      border-radius: 8px;
-      image-rendering: pixelated; /* crisp edges */
-    }
-    button {
-      margin: 5px;
-      padding: 10px 15px;
-      border: 1px solid #01e49a;
-      border-radius: 8px;
-      cursor: pointer;
-      background: #000000;
-      color: #01e49a;
-      font-size: 1rem;
-    }
-    button:hover {
-      background: #01e49a;
-      color: #000000;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>Fair Isle Star Band</title>
+<style>
+  body {
+    background: #000000;
+    font-family: monospace;
+    text-align: center;
+    color: #01e49a; /* teal color for text */
+  }
+  h1 {
+    font-size: 2.2rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  p, li {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    max-width: 700px;
+    margin: 5px auto;
+    text-align: left;
+  }
+  ul {
+    list-style-type: disc;
+    text-align: left;
+    margin: 5px auto 15px auto;
+    padding-left: 20px;
+    max-width: 700px;
+  }
+  canvas {
+    margin: 10px;
+    border-radius: 8px;
+    image-rendering: pixelated; /* crisp edges */
+  }
+  button {
+    margin: 5px;
+    padding: 10px 15px;
+    border: 1px solid #01e49a;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #000000;
+    color: #01e49a;
+    font-size: 1rem;
+  }
+  button:hover {
+    background: #01e49a;
+    color: #000000;
+  }
+  a {
+    color: #01e49a;
+    text-decoration: underline;
+  }
+</style>
 </head>
 <body>
-  <canvas id="bandPattern" width="675" height="135"></canvas>
-  <br>
-  <div>
-    <button onclick="giveFeedback('nnn')">👎👎👎</button>
-    <button onclick="giveFeedback('nn')">👎👎</button>
-    <button onclick="giveFeedback('n')">👎</button>
-    <button onclick="startPattern()">▶️ Start</button>
-    <button onclick="giveFeedback('y')">👍</button>
-    <button onclick="giveFeedback('yy')">👍👍</button>
-    <button onclick="giveFeedback('yyy')">👍👍👍</button>
-  </div>
+
+<h1>Fair Isle knit pattern generator</h1>
+
+<canvas id="bandPattern" width="675" height="135"></canvas>
+<br>
+<div>
+  <button onclick="giveFeedback('nnn')">👎👎👎</button>
+  <button onclick="giveFeedback('nn')">👎👎</button>
+  <button onclick="giveFeedback('n')">👎</button>
+  <button onclick="startPattern()">▶️ Start</button>
+  <button onclick="giveFeedback('y')">👍</button>
+  <button onclick="giveFeedback('yy')">👍👍</button>
+  <button onclick="giveFeedback('yyy')">👍👍👍</button>
+</div>
+
+<p>Fair Isle knitting is a traditional technique where repeating motifs like stars, crosses, and geometric shapes are used to build colorful patterned fabrics. These patterns are symmetrical, bold, and highly recognizable.</p>
+
+<p>This tool lets you generate Fair Isle knit like patterns focused on star designs.</p>
+
+<h2>How it works:</h2>
+<p>The patterns are created randomly, but your choices guide which directions the generator keeps exploring and which it avoids. It’s a simple, interactive way to evolve designs, with you as the judge.</p>
+
+<h2>How to use it:</h2>
+<ul>
+  <li>Click ▶️ Start to generate your first pattern.</li>
+  <li>Use the buttons to rate what you see:
+    <ul>
+      <li>👎👎👎 means “I really dislike this one.”</li>
+      <li>👍👍👍 means “I really love this one.”</li>
+      <li>The middle buttons give softer feedback.</li>
+    </ul>
+  </li>
+  <li>Each time you rate, a new pattern appears.</li>
+</ul>
+
+<p>About my Fair Isle experience: <a href="https://croftandroad.wordpress.com/" target="_blank">https://croftandroad.wordpress.com/</a></p>
 
 <script>
 // -----------------------------
@@ -50,8 +98,8 @@
 // -----------------------------
 const teal = "#01e49a";
 const black = "#000000";
-const tileSize = 27;   // Smaller grid like Python
-const pixelScale = 5;  // Scale factor per pixel
+const tileSize = 27;
+const pixelScale = 5;
 const repeats = 5;
 
 // -----------------------------
@@ -61,8 +109,8 @@ function randomStarParams() {
   return {
     numPoints: Math.floor(Math.random() * 5) + 6, // 6-10
     layers: Math.floor(Math.random() * 3) + 3,    // 3-5
-    rotation: Math.random() * Math.PI / 10,       // small rotation
-    sprinkleChance: Math.random() * 0.15          // sprinkle small extras
+    rotation: Math.random() * Math.PI / 10,
+    sprinkleChance: Math.random() * 0.15
   };
 }
 
@@ -85,15 +133,10 @@ function generateStarPattern(size, params) {
       const ringBand = Math.floor((r / maxRadius) * params.layers);
 
       let val = 0;
-      if (r < maxRadius && starVal > 0.65 && (ringBand % 2 === 0 || (ringBand === 1 && Math.random() < 0.7))) {
-        val = 1;
-      }
-      // Sprinkles
+      if (r < maxRadius && starVal > 0.65 && (ringBand % 2 === 0 || (ringBand === 1 && Math.random() < 0.7))) val = 1;
       if (r < maxRadius*0.85 && Math.random() < params.sprinkleChance) val = 1;
-      // Satellites
       if (starVal > 0.85 && Math.random() < 0.25) val = 1;
 
-      // Mirror to four quadrants
       grid[center + i][center + j] = val;
       grid[center + i][center - j] = val;
       grid[center - i][center + j] = val;
@@ -151,5 +194,6 @@ function giveFeedback(resp) {
   drawBand(grid, "bandPattern", repeats);
 }
 </script>
+
 </body>
 </html>
